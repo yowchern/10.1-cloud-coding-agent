@@ -17,16 +17,24 @@
         <main>
             <!-- Coffee Counter Section -->
             <section class="coffee-counter">
+                <div id="caffeineWarning" class="caffeine-warning" style="display: none;"></div>
                 <div class="counter-display">
-                    <div class="counter-number">
+                    <div class="counter-number" id="counterNumber">
                         <span id="todayCount">0</span>
                     </div>
                     <p>Cups today</p>
+                    <p class="caffeine-total"><span id="caffeineCount">0</span> mg caffeine today</p>
                 </div>
                 
                 <div class="counter-controls">
                     <button id="addCoffeeBtn" class="add-btn">+ Add Coffee</button>
                     <button id="resetBtn" class="reset-btn">Reset Today</button>
+                </div>
+
+                <div class="limit-settings">
+                    <label for="dailyLimitInput">Daily cup limit:</label>
+                    <input type="number" id="dailyLimitInput" min="1" max="20" value="4">
+                    <button id="saveLimitBtn" class="save-limit-btn">Save</button>
                 </div>
             </section>
 

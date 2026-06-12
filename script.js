@@ -1,6 +1,7 @@
 class CoffeeTracker {
     constructor() {
         this.coffeeData = JSON.parse(localStorage.getItem('coffeeData')) || [];
+        this.dailyLimit = parseInt(localStorage.getItem('dailyLimit')) || 4;
         this.init();
     }
 
@@ -8,6 +9,7 @@ class CoffeeTracker {
         this.setupEventListeners();
         this.updateDisplay();
         this.setCurrentTime();
+        document.getElementById('dailyLimitInput').value = this.dailyLimit;
     }
 
     setupEventListeners() {
@@ -30,6 +32,20 @@ class CoffeeTracker {
         document.getElementById('coffeeForm').addEventListener('submit', (e) => {
             e.preventDefault();
             this.addCoffee();
+        });
+
+        // Save daily limit button
+        document.getElementById('saveLimitBtn').addEventListener('click', () => {
+            const input = document.getElementById('dailyLimitInput');
+            const newLimit = parseInt(input.value);
+            if (newLimit >= 1 && newLimit <= 20) {
+                this.dailyLimit = newLimit;
+                localStorage.setItem('dailyLimit', newLimit);
+                this.updateTodayCount();
+                this.showNotification(`Daily limit set to ${newLimit} cups ✓`);
+            } else {
+                this.showNotification('⚠️ Please enter a limit between 1 and 20 cups.', '#e17055');
+            }
         });
     }
 
@@ -111,7 +127,38 @@ class CoffeeTracker {
 
     updateTodayCount() {
         const todaysCoffee = this.getTodaysCoffee();
-        document.getElementById('todayCount').textContent = todaysCoffee.length;
+        const count = todaysCoffee.length;
+        document.getElementById('todayCount').textContent = count;
+
+        // Calculate total caffeine
+        const totalCaffeine = todaysCoffee.reduce((sum, coffee) => {
+            return sum + CoffeeUtils.estimateCaffeine(coffee.type, coffee.size);
+        }, 0);
+        document.getElementById('caffeineCount').textContent = totalCaffeine;
+
+        // Update counter color based on proximity to limit
+        const counterNumber = document.getElementById('counterNumber');
+        const ratio = count / this.dailyLimit;
+        counterNumber.classList.remove('warning', 'exceeded');
+        if (ratio >= 1) {
+            counterNumber.classList.add('exceeded');
+        } else if (ratio >= 0.75) {
+            counterNumber.classList.add('warning');
+        }
+
+        // Update warning banner
+        const warningEl = document.getElementById('caffeineWarning');
+        if (ratio >= 1) {
+            warningEl.textContent = `⚠️ You've reached your daily limit of ${this.dailyLimit} cups!`;
+            warningEl.className = 'caffeine-warning exceeded';
+            warningEl.style.display = 'block';
+        } else if (ratio >= 0.75) {
+            warningEl.textContent = `☕ Heads up — you're approaching your daily limit of ${this.dailyLimit} cups.`;
+            warningEl.className = 'caffeine-warning approaching';
+            warningEl.style.display = 'block';
+        } else {
+            warningEl.style.display = 'none';
+        }
     }
 
     updateCoffeeList() {
@@ -136,6 +183,7 @@ class CoffeeTracker {
                     <div class="coffee-details">
                         <div class="coffee-type">${coffee.type}</div>
                         <div class="coffee-size">${coffee.size}</div>
+                        <div class="coffee-caffeine">~${CoffeeUtils.estimateCaffeine(coffee.type, coffee.size)} mg caffeine</div>
                         ${coffee.notes ? `<div class="coffee-notes">"${coffee.notes}"</div>` : ''}
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -189,14 +237,14 @@ class CoffeeTracker {
         localStorage.setItem('coffeeData', JSON.stringify(this.coffeeData));
     }
 
-    showNotification(message) {
+    showNotification(message, color = '#4CAF50') {
         // Create a simple notification
         const notification = document.createElement('div');
         notification.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #4CAF50;
+            background: ${color};
             color: white;
             padding: 15px 20px;
             border-radius: 10px;

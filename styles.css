@@ -76,6 +76,100 @@ main {
     font-weight: 600;
     color: #8b5a3c;
     margin-bottom: 10px;
+    transition: color 0.4s ease;
+}
+
+.counter-number.warning {
+    color: #e17055;
+}
+
+.counter-number.exceeded {
+    color: #d63031;
+}
+
+.caffeine-total {
+    font-size: 0.95rem;
+    color: #888;
+    font-weight: 400;
+    margin-top: 4px;
+}
+
+.caffeine-warning {
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.caffeine-warning.approaching {
+    background: #ffeaa7;
+    color: #856404;
+    border: 1px solid #ffc107;
+}
+
+.caffeine-warning.exceeded {
+    background: #ffddd6;
+    color: #9b2335;
+    border: 1px solid #d63031;
+}
+
+.limit-settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+
+.limit-settings label {
+    font-size: 0.95rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.limit-settings input[type="number"] {
+    width: 65px;
+    padding: 6px 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    text-align: center;
+    transition: border-color 0.3s ease;
+}
+
+.limit-settings input[type="number"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.save-limit-btn {
+    padding: 7px 18px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.save-limit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+}
+
+.coffee-caffeine {
+    color: #a29bfe;
+    font-size: 0.85rem;
+    margin-bottom: 3px;
+    font-weight: 500;
 }
 
 .counter-display p {
