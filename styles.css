@@ -92,7 +92,7 @@ main {
 }
 
 /* Buttons */
-.add-btn, .reset-btn, .submit-btn, .cancel-btn {
+.add-btn, .reset-btn, .export-btn, .clear-all-btn, .submit-btn, .cancel-btn {
     padding: 12px 24px;
     border: none;
     border-radius: 25px;
@@ -121,6 +121,26 @@ main {
 .reset-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(116, 185, 255, 0.3);
+}
+
+.export-btn {
+    background: linear-gradient(135deg, #55efc4, #00b894);
+    color: white;
+}
+
+.export-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 184, 148, 0.3);
+}
+
+.clear-all-btn {
+    background: linear-gradient(135deg, #fd79a8, #e84393);
+    color: white;
+}
+
+.clear-all-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(232, 67, 147, 0.3);
 }
 
 .submit-btn {
@@ -415,7 +435,7 @@ footer {
         grid-template-columns: 1fr;
     }
     
-    .add-btn, .reset-btn, .submit-btn, .cancel-btn {
+    .add-btn, .reset-btn, .export-btn, .clear-all-btn, .submit-btn, .cancel-btn {
         width: 100%;
         max-width: 200px;
     }

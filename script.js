@@ -21,6 +21,16 @@ class CoffeeTracker {
             this.resetToday();
         });
 
+        // Export CSV button
+        document.getElementById('exportCsvBtn').addEventListener('click', () => {
+            this.exportCSV();
+        });
+
+        // Clear All History button
+        document.getElementById('clearAllBtn').addEventListener('click', () => {
+            this.clearAllHistory();
+        });
+
         // Cancel button
         document.getElementById('cancelBtn').addEventListener('click', () => {
             this.hideAddForm();
@@ -248,6 +258,54 @@ class CoffeeTracker {
         link.download = 'coffee-data.json';
         link.click();
         URL.revokeObjectURL(url);
+    }
+
+    exportCSV() {
+        if (this.coffeeData.length === 0) {
+            this.showNotification('No data to export');
+            return;
+        }
+
+        const escapeCSV = (value) => {
+            const str = value == null ? '' : String(value);
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        const headers = ['Date', 'Type', 'Size', 'Time', 'Notes'];
+        const rows = this.coffeeData.map(coffee => [
+            escapeCSV(coffee.date),
+            escapeCSV(coffee.type),
+            escapeCSV(coffee.size),
+            escapeCSV(coffee.time),
+            escapeCSV(coffee.notes)
+        ].join(','));
+
+        const csvContent = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'coffee-history.csv';
+        link.click();
+        URL.revokeObjectURL(url);
+        this.showNotification('Coffee history exported as CSV! ☕');
+    }
+
+    clearAllHistory() {
+        if (this.coffeeData.length === 0) {
+            this.showNotification('No history to clear');
+            return;
+        }
+
+        if (confirm('Are you sure you want to clear ALL coffee history? This cannot be undone.')) {
+            this.coffeeData = [];
+            this.saveData();
+            this.updateDisplay();
+            this.showNotification('All history has been cleared');
+        }
     }
 
     // Import data function
