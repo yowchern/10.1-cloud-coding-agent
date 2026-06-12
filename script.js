@@ -1,6 +1,8 @@
 class CoffeeTracker {
     constructor() {
         this.coffeeData = JSON.parse(localStorage.getItem('coffeeData')) || [];
+        this.currentPeriod = 'weekly';
+        this.dailyLimit = 4;
         this.init();
     }
 
@@ -30,6 +32,25 @@ class CoffeeTracker {
         document.getElementById('coffeeForm').addEventListener('submit', (e) => {
             e.preventDefault();
             this.addCoffee();
+        });
+
+        // History tab buttons
+        document.querySelectorAll('.history-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.history-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.currentPeriod = btn.dataset.period;
+                this.renderHistoryChart();
+            });
+        });
+
+        // Re-render chart on window resize for responsiveness
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                this.renderHistoryChart();
+            }, 200);
         });
     }
 
@@ -107,6 +128,7 @@ class CoffeeTracker {
         this.updateTodayCount();
         this.updateCoffeeList();
         this.updateStatistics();
+        this.renderHistoryChart();
     }
 
     updateTodayCount() {
@@ -236,6 +258,171 @@ class CoffeeTracker {
                 }
             }, 300);
         }, 3000);
+    }
+
+    getHistoryData(days) {
+        const result = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const dateStr = date.toDateString();
+            const count = this.coffeeData.filter(c => c.date === dateStr).length;
+            result.push({ date, dateStr, count });
+        }
+        return result;
+    }
+
+    renderHistoryChart() {
+        const canvas = document.getElementById('historyChart');
+        if (!canvas) return;
+
+        const days = this.currentPeriod === 'monthly' ? 30 : 7;
+        const data = this.getHistoryData(days);
+        const dpr = window.devicePixelRatio || 1;
+
+        // Set canvas size to fill container
+        const container = canvas.parentElement;
+        const cssWidth = container.clientWidth || 700;
+        const cssHeight = Math.max(200, Math.min(300, cssWidth * 0.4));
+
+        canvas.style.width = cssWidth + 'px';
+        canvas.style.height = cssHeight + 'px';
+        canvas.width = cssWidth * dpr;
+        canvas.height = cssHeight * dpr;
+
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        const W = cssWidth;
+        const H = cssHeight;
+
+        // Layout constants
+        const paddingTop = 20;
+        const paddingBottom = 45;
+        const paddingLeft = 40;
+        const paddingRight = 15;
+        const chartWidth = W - paddingLeft - paddingRight;
+        const chartHeight = H - paddingTop - paddingBottom;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, W, H);
+
+        // Background
+        ctx.fillStyle = '#f8f9fa';
+        ctx.beginPath();
+        ctx.roundRect(0, 0, W, H, 12);
+        ctx.fill();
+
+        const maxCount = Math.max(...data.map(d => d.count), this.dailyLimit, 1);
+        const yScale = chartHeight / (maxCount + 1);
+
+        const barTotalWidth = chartWidth / days;
+        const barWidth = Math.max(8, barTotalWidth * 0.6);
+        const barGap = barTotalWidth * 0.4;
+
+        const MIN_AXIS_FONT = 10;
+        const MAX_AXIS_FONT = 13;
+        const AXIS_FONT_SCALE = 60;
+        const MIN_VALUE_FONT = 9;
+        const MAX_VALUE_FONT = 12;
+        const VALUE_FONT_SCALE = 65;
+        const MIN_LABEL_FONT = 9;
+        const MAX_LABEL_FONT = 11;
+        const LABEL_FONT_SCALE = 70;
+
+        // Draw gridlines and y-axis labels
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 1;
+        ctx.fillStyle = '#999';
+        ctx.font = `${Math.max(MIN_AXIS_FONT, Math.min(MAX_AXIS_FONT, W / AXIS_FONT_SCALE))}px Poppins, sans-serif`;
+        ctx.textAlign = 'right';
+
+        const gridSteps = Math.min(maxCount + 1, 6);
+        for (let i = 0; i <= gridSteps; i++) {
+            const val = Math.round((maxCount + 1) * i / gridSteps);
+            const y = paddingTop + chartHeight - val * yScale;
+            ctx.beginPath();
+            ctx.moveTo(paddingLeft, y);
+            ctx.lineTo(W - paddingRight, y);
+            ctx.stroke();
+            ctx.fillText(val, paddingLeft - 5, y + 4);
+        }
+
+        // Draw daily limit line
+        const limitY = paddingTop + chartHeight - this.dailyLimit * yScale;
+        ctx.save();
+        ctx.strokeStyle = '#ee5a24';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(paddingLeft, limitY);
+        ctx.lineTo(W - paddingRight, limitY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+
+        // Draw bars and x-axis labels
+        data.forEach((d, i) => {
+            const x = paddingLeft + i * barTotalWidth + barGap / 2;
+            const barH = d.count * yScale;
+            const y = paddingTop + chartHeight - barH;
+
+            // Bar colour: exceeded = red gradient, normal = green gradient
+            const exceeded = d.count >= this.dailyLimit;
+            const grad = ctx.createLinearGradient(x, y, x, paddingTop + chartHeight);
+            if (exceeded) {
+                grad.addColorStop(0, '#ff6b6b');
+                grad.addColorStop(1, '#ee5a24');
+            } else {
+                grad.addColorStop(0, '#00b894');
+                grad.addColorStop(1, '#00cec9');
+            }
+
+            ctx.fillStyle = grad;
+            if (d.count > 0) {
+                ctx.beginPath();
+                const radius = Math.min(4, barWidth / 2);
+                ctx.roundRect(x, y, barWidth, barH, [radius, radius, 0, 0]);
+                ctx.fill();
+            }
+
+            // Value label on top of bar
+            if (d.count > 0) {
+                ctx.fillStyle = exceeded ? '#ee5a24' : '#00b894';
+                ctx.font = `bold ${Math.max(MIN_VALUE_FONT, Math.min(MAX_VALUE_FONT, W / VALUE_FONT_SCALE))}px Poppins, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillText(d.count, x + barWidth / 2, y - 4);
+            }
+
+            // X-axis date labels
+            const fontSize = Math.max(MIN_LABEL_FONT, Math.min(MAX_LABEL_FONT, W / LABEL_FONT_SCALE));
+            ctx.fillStyle = '#666';
+            ctx.font = `${fontSize}px Poppins, sans-serif`;
+            ctx.textAlign = 'center';
+
+            const isToday = d.dateStr === new Date().toDateString();
+            const label = days === 7
+                ? d.date.toLocaleDateString('en-US', { weekday: 'short' })
+                : d.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            if (isToday) {
+                ctx.fillStyle = '#667eea';
+                ctx.font = `bold ${fontSize}px Poppins, sans-serif`;
+            }
+
+            ctx.fillText(label, x + barWidth / 2, H - paddingBottom + 16);
+
+            // Dot below label for today
+            if (isToday) {
+                ctx.beginPath();
+                ctx.arc(x + barWidth / 2, H - paddingBottom + 26, 3, 0, Math.PI * 2);
+                ctx.fillStyle = '#667eea';
+                ctx.fill();
+            }
+        });
     }
 
     // Export data function

@@ -105,6 +105,22 @@
                     </div>
                 </div>
             </section>
+
+            <!-- History Chart -->
+            <section class="history-chart-section">
+                <h3>History</h3>
+                <div class="history-controls">
+                    <button id="weeklyBtn" class="history-tab active" data-period="weekly">Weekly (7 days)</button>
+                    <button id="monthlyBtn" class="history-tab" data-period="monthly">Monthly (30 days)</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="historyChart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="legend-dot normal"></span>Within limit</span>
+                    <span class="legend-item"><span class="legend-dot exceeded"></span>Exceeded limit (≥4 cups)</span>
+                </div>
+            </section>
         </main>
 
         <footer>
